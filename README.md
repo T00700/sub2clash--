@@ -19,6 +19,7 @@
   - Hysteria2 （Clash.Meta）
   - Socks5
   - Anytls （Clash.Meta）
+  - Tuic （Clash.Meta）
 
 ## 使用
 
