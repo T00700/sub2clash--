@@ -3,6 +3,7 @@ package parser
 import (
 	"fmt"
 	"net/url"
+	"strconv"
 	"strings"
 
 	P "github.com/bestnite/sub2clash/model/proxy"
@@ -63,6 +64,17 @@ func (p *Hysteria2Parser) Parse(config ParseConfig, proxy string) (P.Proxy, erro
 	}
 	remarks = strings.TrimSpace(remarks)
 
+	// 端口跳跃:URI 社区约定是 mport(Clash Verge Rev),mihomo 字段名 ports 亦兼容
+	ports := query.Get("mport")
+	if ports == "" {
+		ports = query.Get("ports")
+	}
+	hopInterval := query.Get("hop-interval")
+	if hopInterval == "" {
+		hopInterval = query.Get("hop_interval")
+	}
+	hopIntervalInt, _ := strconv.Atoi(hopInterval) // 宽松解析:非法值静默回退 0
+
 	result := P.Proxy{
 		Type: p.GetType(),
 		Name: remarks,
@@ -74,6 +86,8 @@ func (p *Hysteria2Parser) Parse(config ParseConfig, proxy string) (P.Proxy, erro
 			ObfsPassword:   obfsPassword,
 			SNI:            sni,
 			SkipCertVerify: insecureBool,
+			Ports:          ports,
+			HopInterval:    hopIntervalInt,
 		},
 	}
 	return result, nil

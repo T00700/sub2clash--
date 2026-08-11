@@ -196,3 +196,55 @@ func TestHysteria2_Error_InvalidProtocol(t *testing.T) {
 		t.Errorf("Expected error but got none")
 	}
 }
+
+func TestHysteria2_Basic_PortHopping(t *testing.T) {
+	p := &parser.Hysteria2Parser{}
+	input := "hysteria2://password123@proxy.example.com:443?mport=443,30000-30100&hop-interval=30#Hysteria2%20PortHop"
+
+	expected := proxy.Proxy{
+		Type: "hysteria2",
+		Name: "Hysteria2 PortHop",
+		Hysteria2: proxy.Hysteria2{
+			Server:         "proxy.example.com",
+			Port:           443,
+			Password:       "password123",
+			Ports:          "443,30000-30100",
+			HopInterval:    30,
+			SkipCertVerify: false,
+		},
+	}
+
+	result, err := p.Parse(parser.ParseConfig{UseUDP: false}, input)
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+		return
+	}
+
+	validateResult(t, expected, result)
+}
+
+func TestHysteria2_Basic_PortHoppingAliases(t *testing.T) {
+	p := &parser.Hysteria2Parser{}
+	input := "hy2://password123@proxy.example.com:443?ports=20000-30000&hop_interval=abc#Alias"
+
+	expected := proxy.Proxy{
+		Type: "hysteria2",
+		Name: "Alias",
+		Hysteria2: proxy.Hysteria2{
+			Server:         "proxy.example.com",
+			Port:           443,
+			Password:       "password123",
+			Ports:          "20000-30000",
+			HopInterval:    0, // 非法值宽松回退
+			SkipCertVerify: false,
+		},
+	}
+
+	result, err := p.Parse(parser.ParseConfig{UseUDP: false}, input)
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+		return
+	}
+
+	validateResult(t, expected, result)
+}
