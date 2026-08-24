@@ -57,6 +57,11 @@ func (p *AnytlsParser) Parse(config ParseConfig, proxy string) (P.Proxy, error) 
 	}
 	insecure, sni := query.Get("insecure"), query.Get("sni")
 	insecureBool := insecure == "1"
+	var alpn []string
+	if value := query.Get("alpn"); value != "" {
+		alpn = strings.Split(value, ",")
+	}
+	clientFingerprint := query.Get("fp")
 	remarks := link.Fragment
 	if remarks == "" {
 		remarks = fmt.Sprintf("%s:%s", server, portStr)
@@ -67,12 +72,14 @@ func (p *AnytlsParser) Parse(config ParseConfig, proxy string) (P.Proxy, error) 
 		Type: p.GetType(),
 		Name: remarks,
 		Anytls: P.Anytls{
-			Server:         server,
-			Port:           P.IntOrString(port),
-			Password:       password,
-			SNI:            sni,
-			SkipCertVerify: insecureBool,
-			UDP:            config.UseUDP,
+			Server:            server,
+			Port:              P.IntOrString(port),
+			Password:          password,
+			ALPN:              alpn,
+			SNI:               sni,
+			ClientFingerprint: clientFingerprint,
+			SkipCertVerify:    insecureBool,
+			UDP:               config.UseUDP,
 		},
 	}
 	return result, nil
